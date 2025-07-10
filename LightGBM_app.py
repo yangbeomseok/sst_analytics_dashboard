@@ -60,7 +60,7 @@ model, X_test, y_test, test_predictions = load_model_and_data()
 # --- Streamlit 웹페이지 UI 구성 ---
 st.set_page_config(layout="wide")
 st.title('🌊 AI 해수면 온도(SST) 예측 대시보드')
-st.info("ℹ️ 본 모델은 **2024년**의 데이터에 대한 예측을 수행합니다.", icon="ℹ️")
+st.info("ℹ️ 본 모델은 **2024년**의 데이터에 대한 예측을 수행합니다. ℹ️", icon="ℹ️")
 
 # --- 사이드바 (PC UI) ---
 # 모바일에서는 자동으로 숨겨지고 메뉴 버튼으로 바뀝니다.
