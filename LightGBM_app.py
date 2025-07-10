@@ -50,9 +50,11 @@ model, X_test, y_test, test_predictions = load_model_and_data()
 st.set_page_config(layout="wide")
 st.title('🌊 AI 해수면 온도(SST) 예측 대시보드')
 
-st.info("ℹ️ 본 모델은 **2024년**의 데이터에 대한 예측을 수행합니다.", icon="ℹ️")
+st.info("본 모델은 **2024년의 데이터에 대한 예측을 수행합니다.")
 
-# ★★★ 콜백 함수 정의 및 세션 상태 초기화 ★★★
+# --- 사이드바 (입력 부분) ---
+st.sidebar.header("🗓️ 날짜 선택")
+
 if 'date_input' not in st.session_state:
     st.session_state.date_input = "2024년 8월 15일 14시"
 
@@ -62,14 +64,9 @@ def set_summer_example():
 def set_winter_example():
     st.session_state.date_input = "2024년 1월 20일 10시"
 
-# --- 사이드바 (입력 부분) ---
-st.sidebar.header("🗓️ 날짜 선택")
-# text_input 위젯은 이제 세션 상태('date_input')를 직접 사용
 st.sidebar.text_input("날짜와 시간을 입력하세요", key="date_input")
-
 st.sidebar.write("클릭으로 예시 날짜를 입력할 수 있습니다.")
 col1, col2 = st.sidebar.columns(2)
-# 버튼 클릭 시 콜백 함수를 실행하도록 수정
 col1.button("여름 예시 (8월)", on_click=set_summer_example)
 col2.button("겨울 예시 (1월)", on_click=set_winter_example)
 
@@ -79,7 +76,6 @@ predict_button = st.sidebar.button('예측 실행', type="primary")
 st.subheader("모델 예측 결과")
 
 if predict_button:
-    # 예측 시에는 세션 상태에 저장된 값을 가져와서 사용
     date_str = st.session_state.date_input
     try:
         numbers = re.findall(r'\d+', date_str)
@@ -106,6 +102,10 @@ if predict_button:
             error = actual_temp - predicted_temp
 
             st.success(f"**{closest_time.strftime('%Y년 %m월 %d일 %H시')}**의 예측 결과입니다.")
+
+            # ★★★ 입력 시간과 실제 예측 시간이 다를 경우 안내 메시지 추가 ★★★
+            if target_time != closest_time:
+                st.info(f"ℹ️ 입력하신 '{target_time.strftime('%H:%M')}' 데이터가 없어, 가장 가까운 시간인 **'{closest_time.strftime('%H:%M')}'**의 결과가 표시됩니다.")
             
             col1, col2, col3 = st.columns(3)
             col1.metric("🌡️ 모델 예측 온도", f"{predicted_temp:.2f} °C")
@@ -132,15 +132,18 @@ if predict_button:
     except Exception as e:
         st.error(f"입력 형식이 잘못되었습니다. 다시 확인해주세요. (에러: {e})")
 
-# --- 전체 성능 분석 대시보드 (별도 섹션) ---
+# --- 전체 성능 분석 대시보드 ---
 st.write("---")
 with st.expander("📈 전체 모델 성능 분석 대시보드 보기"):
-    # (이하 분석 그래프 코드는 이전과 동일)
     st.markdown("<p style='font-size: 14px;'>아래 그래프들은 2024년 전체 테스트 데이터에 대한 모델의 종합 성능을 보여줍니다.</p>", unsafe_allow_html=True)
     
-    tab1, tab2, tab3, tab4 = st.tabs(["오차 분포도", "예측-실제 산점도", "월별 오차", "특성 중요도"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["시계열 추세", "오차 분포도", "예측-실제 산점도", "월별 오차", "특성 중요도"])
 
     with tab1:
+        chart_df_full = pd.DataFrame({'Actual SST (실제값)': y_test, 'Predicted SST (예측값)': test_predictions})
+        st.line_chart(chart_df_full)
+
+    with tab2:
         errors = y_test - test_predictions
         fig, ax = plt.subplots(figsize=(6, 4))
         ax.hist(errors, bins=50, edgecolor='black', alpha=0.7)
@@ -150,7 +153,7 @@ with st.expander("📈 전체 모델 성능 분석 대시보드 보기"):
         ax.axvline(x=0, color='red', linestyle='--', linewidth=1)
         st.pyplot(fig)
 
-    with tab2:
+    with tab3:
         fig, ax = plt.subplots(figsize=(5, 4))
         ax.scatter(y_test, test_predictions, alpha=0.5, s=5)
         ax.set_title('Actual vs. Predicted SST', fontsize=10)
@@ -161,7 +164,7 @@ with st.expander("📈 전체 모델 성능 분석 대시보드 보기"):
         ax.grid(True)
         st.pyplot(fig)
 
-    with tab3:
+    with tab4:
         monthly_errors = pd.DataFrame({'month': y_test.index.month, 'error': y_test - test_predictions})
         fig, ax = plt.subplots(figsize=(8, 5))
         monthly_errors.boxplot(by='month', column='error', ax=ax, grid=False)
@@ -173,7 +176,7 @@ with st.expander("📈 전체 모델 성능 분석 대시보드 보기"):
         plt.suptitle('')
         st.pyplot(fig)
 
-    with tab4:
+    with tab5:
         fig, ax = plt.subplots(figsize=(8, 6))
         lgb.plot_importance(model, ax=ax, max_num_features=15)
         ax.set_title('Feature Importance', fontsize=10)
