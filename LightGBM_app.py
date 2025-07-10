@@ -166,6 +166,4 @@ with st.expander("📈 전체 모델 성능 분석 대시보드 보기"):
         ax.set_title('Feature Importance', fontsize=10)
         ax.tick_params(axis='both', which='major', labelsize=8)
         st.pyplot(fig)
-```
------
 
