@@ -5,13 +5,10 @@ import numpy as np
 import re
 import matplotlib.pyplot as plt
 
-# --- 데이터 로드 및 모델 학습 (캐시를 사용하여 빠르게 로드) ---
+# --- 데이터 로드 및 모델 학습 
 @st.cache_data
 def load_model_and_data():
-    """
-    CSV 파일에서 데이터를 로드하고, 특성을 생성하며, LightGBM 모델을 학습합니다.
-    Streamlit의 캐시 기능을 사용해 앱 재실행 시 이 과정을 반복하지 않습니다.
-    """
+
     print("✅ 데이터 로드 및 모델 학습을 시작합니다... (이 메시지는 처음 한 번만 보여야 합니다)")
     try:
         train_df = pd.read_csv('train_data.csv', index_col='valid_time', parse_dates=True)
@@ -59,7 +56,7 @@ model, X_test, y_test, test_predictions = load_model_and_data()
 
 # --- Streamlit 웹페이지 UI 구성 ---
 st.set_page_config(layout="wide")
-st.title('🌊 AI 해수면 온도(SST) 예측 대시보드')
+st.title('🌊 AI 해수면 온도(SST) 예측기')
 st.info("ℹ️ 본 모델은 2024년의 데이터에 대한 예측만을 수행합니다. ",)
 
 # --- 사이드바 (PC UI) ---
