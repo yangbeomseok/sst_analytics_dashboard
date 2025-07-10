@@ -60,7 +60,7 @@ model, X_test, y_test, test_predictions = load_model_and_data()
 # --- Streamlit 웹페이지 UI 구성 ---
 st.set_page_config(layout="wide")
 st.title('🌊 AI 해수면 온도(SST) 예측 대시보드')
-st.info("본 모델은 **2024년**의 데이터에 대한 예측을 수행합니다. ℹ️", icon="ℹ️")
+st.info(" 본 모델은 2024년의 데이터에 대한 예측만을 수행합니다. ℹ️", icon="ℹ️")
 
 # --- 사이드바 (PC UI) ---
 # 모바일에서는 자동으로 숨겨지고 메뉴 버튼으로 바뀝니다.
@@ -130,7 +130,7 @@ if predict_button:
                 st.success(f"**{closest_time.strftime('%Y년 %m월 %d일 %H시')}**의 예측 결과입니다.")
                 
                 if target_time.round('min') != closest_time.round('min'):
-                    st.info(f"ℹ️ 입력하신 시간 '{target_time.strftime('%H:%M')}'의 데이터가 없어, 가장 가까운 시간인 **'{closest_time.strftime('%H:%M')}'**의 결과가 표시됩니다.")
+                    st.info(f"ℹ️ 입력하신 시간 '{target_time.strftime('%H:%M')}'의 데이터가 없어, 가장 가까운 시간인 '{closest_time.strftime('%H:%M')}'의 결과가 표시됩니다.")
                 
                 res_col1, res_col2, res_col3 = st.columns(3)
                 res_col1.metric("🌡️ 모델 예측 온도", f"{predicted_temp:.2f} °C")
