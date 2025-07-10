@@ -134,7 +134,7 @@ if predict_button:
 
 # --- 전체 성능 분석 대시보드 ---
 st.write("---")
-with st.expander("📈 전체 모델 성능 분석 대시보드 보기"):
+with st.expander("Click ! 📈 전체 모델 성능 분석 대시보드 보기"):
     st.markdown("<p style='font-size: 14px;'>아래 그래프들은 2024년 전체 테스트 데이터에 대한 모델의 종합 성능을 보여줍니다.</p>", unsafe_allow_html=True)
     
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["시계열 추세", "오차 분포도", "예측-실제 산점도", "월별 오차", "특성 중요도"])
