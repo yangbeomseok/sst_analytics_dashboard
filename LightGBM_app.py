@@ -5,15 +5,24 @@ import numpy as np
 import re
 import matplotlib.pyplot as plt
 
-# --- 데이터 로드 및 모델 학습 (캐시 사용) ---
+# --- 데이터 로드 및 모델 학습 (캐시를 사용하여 빠르게 로드) ---
 @st.cache_data
 def load_model_and_data():
+    """
+    CSV 파일에서 데이터를 로드하고, 특성을 생성하며, LightGBM 모델을 학습합니다.
+    Streamlit의 캐시 기능을 사용해 앱 재실행 시 이 과정을 반복하지 않습니다.
+    """
     print("✅ 데이터 로드 및 모델 학습을 시작합니다... (이 메시지는 처음 한 번만 보여야 합니다)")
-    train_df = pd.read_csv('train_data.csv', index_col='valid_time', parse_dates=True)
-    validation_df = pd.read_csv('validation_data.csv', index_col='valid_time', parse_dates=True)
-    test_df = pd.read_csv('test_data.csv', index_col='valid_time', parse_dates=True)
+    try:
+        train_df = pd.read_csv('train_data.csv', index_col='valid_time', parse_dates=True)
+        validation_df = pd.read_csv('validation_data.csv', index_col='valid_time', parse_dates=True)
+        test_df = pd.read_csv('test_data.csv', index_col='valid_time', parse_dates=True)
+    except FileNotFoundError:
+        st.error("데이터 파일(.csv)을 찾을 수 없습니다. GitHub 저장소에 데이터 파일이 모두 업로드되었는지 확인해주세요.")
+        st.stop()
 
     def make_lag_features(df, lag_days):
+        """시계열 데이터에 대한 시차 특성(힌트)을 생성합니다."""
         df_lag = df.copy()
         cols_to_lag = [col for col in df_lag.columns if 'sst' in col or 't2m' in col or 'wind' in col]
         for col in cols_to_lag:
@@ -25,10 +34,12 @@ def load_model_and_data():
     full_train_df = pd.concat([train_df, validation_df])
     train_featured = make_lag_features(full_train_df, lag_days)
     test_featured = make_lag_features(test_df, lag_days)
+
     train_featured = train_featured.dropna()
     test_featured = test_featured.dropna()
 
     def split_X_y(df):
+        """데이터를 입력(X)과 정답(y)으로 분리합니다."""
         X = df.drop(columns=['sst', 'number', 'latitude', 'longitude', 'expver'])
         y = df['sst']
         return X, y
@@ -48,35 +59,31 @@ model, X_test, y_test, test_predictions = load_model_and_data()
 
 # --- Streamlit 웹페이지 UI 구성 ---
 st.set_page_config(layout="wide")
-st.title('🌊 AI 해수면 온도(SST) 예측기')
-
+st.title('🌊 AI 해수면 온도(SST) 예측 대시보드')
 st.info("본 모델은 2024년의 데이터에 대한 예측을 수행합니다.")
 
-# --- 사이드바 (입력 부분) ---
-st.sidebar.header("🗓️ 날짜 선택")
+# --- 메인 화면에 접이식 입력창 생성 (모바일 UI 개선) ---
+with st.expander("🗓️ 예측할 날짜 입력하기", expanded=True):
+    if 'date_input' not in st.session_state:
+        st.session_state.date_input = "2024년 8월 15일 14시"
 
-if 'date_input' not in st.session_state:
-    st.session_state.date_input = "2024년 8월 15일 14시"
+    def set_summer_example():
+        st.session_state.date_input = "2024년 8월 15일 14시"
 
-def set_summer_example():
-    st.session_state.date_input = "2024년 8월 15일 14시"
+    def set_winter_example():
+        st.session_state.date_input = "2024년 1월 20일 10시"
 
-def set_winter_example():
-    st.session_state.date_input = "2024년 1월 20일 10시"
+    date_str = st.text_input("날짜와 시간을 입력하세요", key="date_input", label_visibility="collapsed")
+    
+    col1, col2, col3 = st.columns([1,1,2])
+    col1.button("여름 예시 (8월)", on_click=set_summer_example, use_container_width=True)
+    col2.button("겨울 예시 (1월)", on_click=set_winter_example, use_container_width=True)
+    
+    predict_button = st.button('예측 실행', type="primary", use_container_width=True)
 
-st.sidebar.text_input("날짜와 시간을 입력하세요", key="date_input")
-st.sidebar.write("클릭으로 예시 날짜를 입력할 수 있습니다.")
-col1, col2 = st.sidebar.columns(2)
-col1.button("여름 예시 (8월)", on_click=set_summer_example)
-col2.button("겨울 예시 (1월)", on_click=set_winter_example)
-
-predict_button = st.sidebar.button('예측 실행', type="primary")
-
-# --- 메인 페이지 (결과 부분) ---
-st.subheader("모델 예측 결과")
-
+# --- 예측 결과 표시 ---
 if predict_button:
-    date_str = st.session_state.date_input
+    st.subheader("모델 예측 결과")
     try:
         numbers = re.findall(r'\d+', date_str)
         if len(numbers) < 4:
@@ -102,15 +109,14 @@ if predict_button:
             error = actual_temp - predicted_temp
 
             st.success(f"**{closest_time.strftime('%Y년 %m월 %d일 %H시')}**의 예측 결과입니다.")
-
-            # ★★★ 입력 시간과 실제 예측 시간이 다를 경우 안내 메시지 추가 ★★★
-            if target_time != closest_time:
-                st.info(f"입력하신 시간 '{target_time.strftime('%H:%M')}'의 데이터가 없어, 가장 가까운 시간인 '{closest_time.strftime('%H:%M')}'의 결과가 표시됩니다.")
             
-            col1, col2, col3 = st.columns(3)
-            col1.metric("🌡️ 모델 예측 온도", f"{predicted_temp:.2f} °C")
-            col2.metric("🎯 실제 정답 온도", f"{actual_temp:.2f} °C")
-            col3.metric("📊 오차", f"{error:.2f} °C", delta_color="inverse")
+            if target_time.round('min') != closest_time.round('min'):
+                st.info(f"ℹ️ 입력하신 시간 '{target_time.strftime('%H:%M')}'의 데이터가 없어, 가장 가까운 시간인 '{closest_time.strftime('%H:%M')}'의 결과가 표시됩니다.")
+            
+            res_col1, res_col2, res_col3 = st.columns(3)
+            res_col1.metric("🌡️ 모델 예측 온도", f"{predicted_temp:.2f} °C")
+            res_col2.metric("🎯 실제 정답 온도", f"{actual_temp:.2f} °C")
+            res_col3.metric("📊 오차", f"{error:.2f} °C", delta_color="inverse")
 
             st.write("---")
             st.subheader(f"'{closest_time.date()}' 주변 예측 추세 그래프")
