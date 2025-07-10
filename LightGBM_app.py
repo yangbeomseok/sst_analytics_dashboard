@@ -50,15 +50,24 @@ model, X_test, y_test, test_predictions = load_model_and_data()
 st.set_page_config(layout="wide")
 st.title('🌊 AI 해수면 온도(SST) 예측 대시보드')
 
+st.info("ℹ️ 본 모델은 2024년의 데이터에 대한 예측만 수행합니다.", icon="ℹ️")
+
 # --- 사이드바 (입력 부분) ---
 st.sidebar.header("🗓️ 날짜 선택")
-date_str = st.sidebar.text_input("날짜와 시간을 입력하세요", "2024년 8월 15일 14시")
+date_str = st.sidebar.text_input("날짜와 시간을 입력하세요", "2024년 8월 15일 14시", key="date_input")
+
+st.sidebar.write("클릭으로 예시 날짜를 입력할 수 있습니다.")
+col1, col2 = st.sidebar.columns(2)
+if col1.button("여름 예시 (8월)"):
+    st.session_state.date_input = "2024년 8월 15일 14시"
+if col2.button("겨울 예시 (1월)"):
+    st.session_state.date_input = "2024년 1월 20일 10시"
+
 predict_button = st.sidebar.button('예측 실행', type="primary")
 
 # --- 메인 페이지 (결과 부분) ---
 st.subheader("모델 예측 결과")
 
-# 예측 버튼을 누르면 이 블록이 실행됨
 if predict_button:
     try:
         numbers = re.findall(r'\d+', date_str)
@@ -74,12 +83,10 @@ if predict_button:
         if not (min_date <= target_time <= max_date):
             st.error(f"예측 가능 범위를 벗어났습니다. (기간: {min_date.date()} ~ {max_date.date()})")
         else:
-            # 가장 가까운 시간의 '정수 위치'를 찾음 (안정적인 방식)
             time_diff = (y_test.index - target_time).to_series().abs()
             closest_index_pos = np.argmin(time_diff.values)
             closest_time = y_test.index[closest_index_pos]
 
-            # 정수 위치(iloc)를 사용해서 데이터를 안전하게 추출
             input_features = X_test.iloc[[closest_index_pos]]
             actual_temp = y_test.iloc[closest_index_pos]
             
@@ -93,7 +100,6 @@ if predict_button:
             col2.metric("🎯 실제 정답 온도", f"{actual_temp:.2f} °C")
             col3.metric("📊 오차", f"{error:.2f} °C", delta_color="inverse")
 
-            # ★★★ 입력된 날짜 주변의 예측 추세 그래프 ★★★
             st.write("---")
             st.subheader(f"'{closest_time.date()}' 주변 예측 추세 그래프")
             
@@ -160,3 +166,6 @@ with st.expander("📈 전체 모델 성능 분석 대시보드 보기"):
         ax.set_title('Feature Importance', fontsize=10)
         ax.tick_params(axis='both', which='major', labelsize=8)
         st.pyplot(fig)
+```
+-----
+
