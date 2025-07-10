@@ -50,18 +50,28 @@ model, X_test, y_test, test_predictions = load_model_and_data()
 st.set_page_config(layout="wide")
 st.title('🌊 AI 해수면 온도(SST) 예측 대시보드')
 
-st.info("ℹ️ 본 모델은 2024년의 데이터에 대한 예측만 수행합니다.", icon="ℹ️")
+st.info("ℹ️ 본 모델은 **2024년**의 데이터에 대한 예측을 수행합니다.", icon="ℹ️")
+
+# ★★★ 콜백 함수 정의 및 세션 상태 초기화 ★★★
+if 'date_input' not in st.session_state:
+    st.session_state.date_input = "2024년 8월 15일 14시"
+
+def set_summer_example():
+    st.session_state.date_input = "2024년 8월 15일 14시"
+
+def set_winter_example():
+    st.session_state.date_input = "2024년 1월 20일 10시"
 
 # --- 사이드바 (입력 부분) ---
 st.sidebar.header("🗓️ 날짜 선택")
-date_str = st.sidebar.text_input("날짜와 시간을 입력하세요", "2024년 8월 15일 14시", key="date_input")
+# text_input 위젯은 이제 세션 상태('date_input')를 직접 사용
+st.sidebar.text_input("날짜와 시간을 입력하세요", key="date_input")
 
 st.sidebar.write("클릭으로 예시 날짜를 입력할 수 있습니다.")
 col1, col2 = st.sidebar.columns(2)
-if col1.button("여름 예시 (8월)"):
-    st.session_state.date_input = "2024년 8월 15일 14시"
-if col2.button("겨울 예시 (1월)"):
-    st.session_state.date_input = "2024년 1월 20일 10시"
+# 버튼 클릭 시 콜백 함수를 실행하도록 수정
+col1.button("여름 예시 (8월)", on_click=set_summer_example)
+col2.button("겨울 예시 (1월)", on_click=set_winter_example)
 
 predict_button = st.sidebar.button('예측 실행', type="primary")
 
@@ -69,6 +79,8 @@ predict_button = st.sidebar.button('예측 실행', type="primary")
 st.subheader("모델 예측 결과")
 
 if predict_button:
+    # 예측 시에는 세션 상태에 저장된 값을 가져와서 사용
+    date_str = st.session_state.date_input
     try:
         numbers = re.findall(r'\d+', date_str)
         if len(numbers) < 4:
@@ -123,6 +135,7 @@ if predict_button:
 # --- 전체 성능 분석 대시보드 (별도 섹션) ---
 st.write("---")
 with st.expander("📈 전체 모델 성능 분석 대시보드 보기"):
+    # (이하 분석 그래프 코드는 이전과 동일)
     st.markdown("<p style='font-size: 14px;'>아래 그래프들은 2024년 전체 테스트 데이터에 대한 모델의 종합 성능을 보여줍니다.</p>", unsafe_allow_html=True)
     
     tab1, tab2, tab3, tab4 = st.tabs(["오차 분포도", "예측-실제 산점도", "월별 오차", "특성 중요도"])
@@ -166,4 +179,3 @@ with st.expander("📈 전체 모델 성능 분석 대시보드 보기"):
         ax.set_title('Feature Importance', fontsize=10)
         ax.tick_params(axis='both', which='major', labelsize=8)
         st.pyplot(fig)
-
