@@ -60,87 +60,106 @@ model, X_test, y_test, test_predictions = load_model_and_data()
 # --- Streamlit 웹페이지 UI 구성 ---
 st.set_page_config(layout="wide")
 st.title('🌊 AI 해수면 온도(SST) 예측 대시보드')
-st.info("본 모델은 2024년의 데이터에 대한 예측을 수행합니다.")
+st.info("ℹ️ 본 모델은 **2024년**의 데이터에 대한 예측을 수행합니다.", icon="ℹ️")
 
-# --- 메인 화면에 접이식 입력창 생성 (모바일 UI 개선) ---
-with st.expander("🗓️ 예측할 날짜 입력하기", expanded=True):
-    if 'date_input' not in st.session_state:
-        st.session_state.date_input = "2024년 8월 15일 14시"
+# --- 사이드바 (PC UI) ---
+# 모바일에서는 자동으로 숨겨지고 메뉴 버튼으로 바뀝니다.
+st.sidebar.header("🗓️ 날짜 선택")
 
-    def set_summer_example():
-        st.session_state.date_input = "2024년 8월 15일 14시"
+# --- 콜백 함수 및 세션 상태 정의 ---
+if 'date_input' not in st.session_state:
+    st.session_state.date_input = ""
 
-    def set_winter_example():
-        st.session_state.date_input = "2024년 1월 20일 10시"
+def set_example_date(date_str):
+    st.session_state.date_input = date_str
 
-    date_str = st.text_input("날짜와 시간을 입력하세요", key="date_input", label_visibility="collapsed")
-    
-    col1, col2, col3 = st.columns([1,1,2])
-    col1.button("여름 예시 (8월)", on_click=set_summer_example, use_container_width=True)
-    col2.button("겨울 예시 (1월)", on_click=set_winter_example, use_container_width=True)
-    
-    predict_button = st.button('예측 실행', type="primary", use_container_width=True)
+# --- 입력창 및 예시 버튼 ---
+st.sidebar.text_input(
+    "날짜와 시간을 입력하세요", 
+    key="date_input", 
+    placeholder="예: 2024년 8월 15일 14시"
+)
 
-# --- 예측 결과 표시 ---
+st.sidebar.write("클릭으로 예시 날짜를 입력할 수 있습니다.")
+c1, c2 = st.sidebar.columns(2)
+c1.button("봄(4월)", on_click=set_example_date, args=("2024년 4월 10일 14시",), use_container_width=True)
+c2.button("여름(8월)", on_click=set_example_date, args=("2024년 8월 15일 14시",), use_container_width=True)
+c3, c4 = st.sidebar.columns(2)
+c3.button("가을(10월)", on_click=set_example_date, args=("2024년 10월 25일 14시",), use_container_width=True)
+c4.button("겨울(1월)", on_click=set_example_date, args=("2024년 1월 20일 10시",), use_container_width=True)
+
+predict_button = st.sidebar.button('예측 실행', type="primary", use_container_width=True)
+
+# --- 메인 페이지 (결과 표시) ---
+st.subheader("모델 예측 결과")
+
+# 앱 처음 실행 시 또는 버튼 누르기 전 안내 메시지
+if not predict_button and not st.session_state.get('result_displayed', False):
+     st.info("👈 왼쪽 입력창에 날짜를 입력하고 '예측 실행' 버튼을 눌러주세요.")
+
 if predict_button:
-    st.subheader("모델 예측 결과")
-    try:
-        numbers = re.findall(r'\d+', date_str)
-        if len(numbers) < 4:
-            raise ValueError("날짜/시간 정보가 부족합니다.")
-        
-        year, month, day, hour = numbers[:4]
-        minute = numbers[4] if len(numbers) > 4 else '00'
-        standard_format_str = f"{year}-{int(month):02d}-{int(day):02d} {int(hour):02d}:{int(minute):02d}"
-        target_time = pd.to_datetime(standard_format_str)
-
-        min_date, max_date = y_test.index.min(), y_test.index.max()
-        if not (min_date <= target_time <= max_date):
-            st.error(f"예측 가능 범위를 벗어났습니다. (기간: {min_date.date()} ~ {max_date.date()})")
-        else:
-            time_diff = (y_test.index - target_time).to_series().abs()
-            closest_index_pos = np.argmin(time_diff.values)
-            closest_time = y_test.index[closest_index_pos]
-
-            input_features = X_test.iloc[[closest_index_pos]]
-            actual_temp = y_test.iloc[closest_index_pos]
+    st.session_state.result_displayed = True
+    date_str = st.session_state.date_input
+    if not date_str:
+        st.warning("날짜를 입력해주세요.")
+    else:
+        try:
+            numbers = re.findall(r'\d+', date_str)
+            if len(numbers) < 4:
+                raise ValueError("날짜/시간 정보가 부족합니다.")
             
-            predicted_temp = model.predict(input_features)[0]
-            error = actual_temp - predicted_temp
+            year, month, day, hour = numbers[:4]
+            minute = numbers[4] if len(numbers) > 4 else '00'
+            standard_format_str = f"{year}-{int(month):02d}-{int(day):02d} {int(hour):02d}:{int(minute):02d}"
+            target_time = pd.to_datetime(standard_format_str)
 
-            st.success(f"**{closest_time.strftime('%Y년 %m월 %d일 %H시')}**의 예측 결과입니다.")
-            
-            if target_time.round('min') != closest_time.round('min'):
-                st.info(f"ℹ️ 입력하신 시간 '{target_time.strftime('%H:%M')}'의 데이터가 없어, 가장 가까운 시간인 '{closest_time.strftime('%H:%M')}'의 결과가 표시됩니다.")
-            
-            res_col1, res_col2, res_col3 = st.columns(3)
-            res_col1.metric("🌡️ 모델 예측 온도", f"{predicted_temp:.2f} °C")
-            res_col2.metric("🎯 실제 정답 온도", f"{actual_temp:.2f} °C")
-            res_col3.metric("📊 오차", f"{error:.2f} °C", delta_color="inverse")
+            min_date, max_date = y_test.index.min(), y_test.index.max()
+            if not (min_date <= target_time <= max_date):
+                st.error(f"예측 가능 범위를 벗어났습니다. (기간: {min_date.date()} ~ {max_date.date()})")
+            else:
+                time_diff = (y_test.index - target_time).to_series().abs()
+                closest_index_pos = np.argmin(time_diff.values)
+                closest_time = y_test.index[closest_index_pos]
 
-            st.write("---")
-            st.subheader(f"'{closest_time.date()}' 주변 예측 추세 그래프")
-            
-            start_date = closest_time - pd.Timedelta(days=3)
-            end_date = closest_time + pd.Timedelta(days=3)
+                input_features = X_test.iloc[[closest_index_pos]]
+                actual_temp = y_test.iloc[closest_index_pos]
+                
+                predicted_temp = model.predict(input_features)[0]
+                error = actual_temp - predicted_temp
 
-            chart_data_actual = y_test.loc[start_date:end_date]
-            chart_data_to_predict = X_test.loc[start_date:end_date]
-            chart_predictions = model.predict(chart_data_to_predict)
+                st.success(f"**{closest_time.strftime('%Y년 %m월 %d일 %H시')}**의 예측 결과입니다.")
+                
+                if target_time.round('min') != closest_time.round('min'):
+                    st.info(f"ℹ️ 입력하신 시간 '{target_time.strftime('%H:%M')}'의 데이터가 없어, 가장 가까운 시간인 **'{closest_time.strftime('%H:%M')}'**의 결과가 표시됩니다.")
+                
+                res_col1, res_col2, res_col3 = st.columns(3)
+                res_col1.metric("🌡️ 모델 예측 온도", f"{predicted_temp:.2f} °C")
+                res_col2.metric("🎯 실제 정답 온도", f"{actual_temp:.2f} °C")
+                res_col3.metric("📊 오차", f"{error:.2f} °C", delta_color="inverse")
 
-            chart_df = pd.DataFrame({
-                'Actual SST (실제값)': chart_data_actual,
-                'Predicted SST (예측값)': chart_predictions
-            }, index=chart_data_actual.index)
+                st.write("---")
+                st.subheader(f"'{closest_time.date()}' 주변 예측 추세 그래프")
+                
+                start_date = closest_time - pd.Timedelta(days=3)
+                end_date = closest_time + pd.Timedelta(days=3)
 
-            st.line_chart(chart_df)
+                chart_data_actual = y_test.loc[start_date:end_date]
+                chart_data_to_predict = X_test.loc[start_date:end_date]
+                chart_predictions = model.predict(chart_data_to_predict)
 
-    except Exception as e:
-        st.error(f"입력 형식이 잘못되었습니다. 다시 확인해주세요. (에러: {e})")
+                chart_df = pd.DataFrame({
+                    'Actual SST (실제값)': chart_data_actual,
+                    'Predicted SST (예측값)': chart_predictions
+                }, index=chart_data_actual.index)
+
+                st.line_chart(chart_df)
+
+        except Exception as e:
+            st.error(f"입력 형식이 잘못되었습니다. 다시 확인해주세요. (에러: {e})")
 
 # --- 전체 성능 분석 대시보드 ---
 st.write("---")
-with st.expander("Click ! 📈 전체 모델 성능 분석 대시보드 보기"):
+with st.expander("📈 전체 모델 성능 분석 대시보드 보기"):
     st.markdown("<p style='font-size: 14px;'>아래 그래프들은 2024년 전체 테스트 데이터에 대한 모델의 종합 성능을 보여줍니다.</p>", unsafe_allow_html=True)
     
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["시계열 추세", "오차 분포도", "예측-실제 산점도", "월별 오차", "특성 중요도"])
