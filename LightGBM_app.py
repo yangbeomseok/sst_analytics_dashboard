@@ -56,7 +56,7 @@ model, X_test, y_test, test_predictions = load_model_and_data()
 
 # --- Streamlit 웹페이지 UI 구성 ---
 st.set_page_config(layout="wide")
-st.title('🌊 AI 해수면 온도(SST) 예측기')
+st.title('🌊 부산 해수면 온도(SST) 예측 AI')
 st.info("ℹ️ 본 모델은 2024년의 데이터에 대한 예측만을 수행합니다. ",)
 
 # --- 사이드바 (PC UI) ---
