@@ -1,4 +1,4 @@
-# 🌊 SST_Prediction_APP
+# 🌊 SST-Analytics Dashboard
 
 > **Sea Surface Temperature (SST) Prediction Application** > A project that predicts the sea surface temperature of the Busan coast using a LightGBM-based machine learning model and provides intuitive verification through a Streamlit web application.
 
