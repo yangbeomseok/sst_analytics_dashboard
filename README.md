@@ -1,6 +1,7 @@
 # 🌊 KIOST_KOSC_SST-Analytics_Dashboard
-
+[https://sstpredictionapp-bgu6hfkkjvy4vnx5jtyqtl.streamlit.app/]
 > Developed during an internship at the **KIOST, Korea Ocean Satellite Center (KOSC)**, this project predicts the sea surface temperature of the Busan coast using a LightGBM model and visualizes the results through a Streamlit web application.
+
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Framework-Streamlit-red.svg)](https://streamlit.io/)
