@@ -1,6 +1,6 @@
 # 🌊 KIOST_KOSC_SST-Analytics_Dashboard
 
-> **Sea Surface Temperature (SST) Prediction Application** > A project that predicts the sea surface temperature of the Busan coast using a LightGBM-based machine learning model and provides intuitive verification through a Streamlit web application.
+> Developed during an internship at the **KIOST, Korea Ocean Satellite Center (KOSC)**, this project predicts the sea surface temperature of the Busan coast using a LightGBM model and visualizes the results through a Streamlit web application.
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Framework-Streamlit-red.svg)](https://streamlit.io/)
@@ -12,7 +12,7 @@
 ## 📖 Project Overview
 
 Sea Surface Temperature (SST) in the coastal area of Busan plays a crucial role in various fields, including **climate change research, marine ecosystem management, and fishing activities**.  
-This project trains a **LightGBM model** using **ERA5 reanalysis data** to predict SST and visualizes the results with a **Streamlit application** to make it easily accessible to everyone.
+This project, initiated during an internship at the **KIOST, Korea Ocean Satellite Center (KOSC)**, trains a **LightGBM model** using **ERA5 reanalysis data** to predict SST. It visualizes the results with a **Streamlit application**, demonstrating a practical approach to making complex oceanographic data accessible for monitoring and analysis.
 
 ---
 
