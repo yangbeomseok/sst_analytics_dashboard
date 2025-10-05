@@ -75,6 +75,7 @@ This project, initiated during an internship at the **KIOST, Korea Ocean Satelli
 
 ## 📂 Project Structure
 
+```
 SST_Prediction_APP/  
 ├── LightGBM_modeling.py      # LightGBM 모델 학습 및 평가  
 ├── LightGBM_app.py           # Streamlit 앱 실행 스크립트  
@@ -85,7 +86,7 @@ SST_Prediction_APP/
 │   └── test_data.csv  
 └── models/  
     └── sst_model.pkl         # 학습 완료된 모델
-
+```
 ---
 
 ## 📈 Usage Examples
