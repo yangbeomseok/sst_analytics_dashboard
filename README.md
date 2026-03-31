@@ -1,112 +1,62 @@
-# 🌊 KIOST_KOSC_SST-Analytics_Dashboard
-[https://sstpredictionapp-bgu6hfkkjvy4vnx5jtyqtl.streamlit.app/]
-> Developed during an internship at the **KIOST, Korea Ocean Satellite Center (KOSC)**, this project predicts the sea surface temperature of the Busan coast using a LightGBM model and visualizes the results through a Streamlit web application.
+# 🌊 SST Analytics Dashboard
 
+**한국해양과학기술원(KIOST) 해양위성센터(KOSC) 인턴십 프로젝트**
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
-[![Streamlit](https://img.shields.io/badge/Framework-Streamlit-red.svg)](https://streamlit.io/)
-[![LightGBM](https://img.shields.io/badge/Model-LightGBM-green.svg)](https://lightgbm.readthedocs.io/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+부산 연안 해수면 온도(SST)를 LightGBM 모델로 예측하고, Streamlit 웹 앱으로 시각화하는 프로젝트입니다.
 
----
+**배포 주소**: https://sstpredictionapp-bgu6hfkkjvy4vnx5jtyqtl.streamlit.app/
 
-## 📖 Project Overview
+## 주요 기능
 
-Sea Surface Temperature (SST) in the coastal area of Busan plays a crucial role in various fields, including **climate change research, marine ecosystem management, and fishing activities**.  
-This project, initiated during an internship at the **KIOST, Korea Ocean Satellite Center (KOSC)**, trains a **LightGBM model** using **ERA5 reanalysis data** to predict SST. It visualizes the results with a **Streamlit application**, demonstrating a practical approach to making complex oceanographic data accessible for monitoring and analysis.
+- **SST 예측** - 특정 날짜/조건을 입력하면 해수면 온도를 예측합니다
+- **시계열 분석** - 과거 데이터 기반 SST 변화 추이를 확인할 수 있습니다
+- **시각화** - 실측값과 예측값 비교 그래프를 제공합니다
+- **CSV 업로드** - 사용자 데이터를 업로드하여 일괄 예측이 가능합니다
+- **Feature Importance** - 모델의 변수 중요도를 확인할 수 있습니다
 
----
+## 🛠 기술 스택
 
-## ✨ Key Features
+| 분류 | 기술 |
+|------|------|
+| 언어 | Python 3.8+ |
+| 모델 | LightGBM |
+| 웹 프레임워크 | Streamlit |
+| 데이터 처리 | Pandas, NumPy |
+| 시각화 | Matplotlib, Seaborn |
 
-- **Real-time SST Prediction**: Outputs SST prediction results for a specific date/condition input.
-- **Time Series Analysis**: Estimates future SST changes based on past data.
-- **Visualization**: Compares actual vs. predicted values in a graph.
-- **User Input Support**: Allows custom predictions through CSV uploads.
-- **Model Explainability**: Provides feature importance.
+## 데이터
 
----
+- **출처**: ECMWF ERA5 재분석 자료
+- **형식**: CSV (train, validation, test)
+- **주요 변수**: 기온, 해면기압, 풍속, 일사량 등
+- **예측 대상**: 해수면 온도 (SST, ℃)
 
-## 🛠 Tech Stack
+## 모델
 
-- **Language**: Python 3.8+
-- **Model**: LightGBM
-- **Web Framework**: Streamlit
-- **Data Processing**: Pandas, NumPy
-- **Visualization**: Matplotlib, Seaborn
-- **Others**: joblib/pickle (for model saving and loading)
+- **알고리즘**: LightGBM (Gradient Boosting Decision Tree)
+- **Feature Engineering**: SST, 기온, 풍속에 대한 1/2/3/7일 래그 변수 생성
+- **평가 지표**: RMSE, MAE, R²
 
----
-
-## 📊 Data Description
-
-- **Source**: ECMWF ERA5 Reanalysis Data
-- **Data Format**: CSV (train, validation, test)
-- **Main Features**:
-  - Temperature
-  - Sea Level Pressure
-  - Wind Speed
-  - Precipitation
-  - Humidity
-  - Other climate/ocean variables
-- **Target**: Sea Surface Temperature (SST, ℃)
-
----
-
-## ⚙️ Model Architecture & Training
-
-- **Algorithm**: LightGBM (Gradient Boosting Decision Tree)
-- **Hyperparameters (Example)**:
-  ```yaml
-  learning_rate: 0.05
-  num_leaves: 31
-  max_depth: -1
-  n_estimators: 500
-  min_child_samples: 20
-  subsample: 0.8
-  colsample_bytree: 0.8
-  
-- **Performance Evaluation Metrics**:
-  - RMSE (Root Mean Squared Error)
-  - MAE (Mean Absolute Error)
-  - R² (Coefficient of Determination)
-
----
-
-## 📂 Project Structure
+## 📁 프로젝트 구조
 
 ```
-SST_Prediction_APP/  
-├── LightGBM_modeling.py      # LightGBM 모델 학습 및 평가  
-├── LightGBM_app.py           # Streamlit 앱 실행 스크립트  
-├── requirements.txt          # 필요 라이브러리  
-├── data/  
-│   ├── train_data.csv  
-│   ├── validation_data.csv  
-│   └── test_data.csv  
-└── models/  
-    └── sst_model.pkl         # 학습 완료된 모델
+├── LightGBM_modeling.py      # 모델 학습 및 평가
+├── LightGBM_app.py           # Streamlit 앱
+├── requirements.txt          # 라이브러리 목록
+├── train_data.csv
+├── validation_data.csv
+└── test_data.csv
 ```
----
 
-## 📈 Usage Examples
+## 실행 방법
 
-- **Single Input Prediction**
-  - Input date, temperature, wind speed, pressure, etc., to get a predicted SST value.
+```bash
+git clone https://github.com/yangbeomseok/sst_analytics_dashboard.git
+cd sst_analytics_dashboard
+pip install -r requirements.txt
+streamlit run LightGBM_app.py
+```
 
-- **CSV Upload Prediction**
-  - Upload a historical data file → Predict SST for multiple time points.
+## 📄 라이선스
 
-- **Visualization Results**
-  - Actual vs. Predicted values comparison graph.
-  - Feature Importance plot.
-
----
-
-## 🔮 Future Improvements
-
-- Comparative experiments with deep learning models (LSTM, Transformer).
-- Spatial prediction (map-based SST prediction).
-- Automated hyperparameter optimization using tools like Optuna.
-- Deployment via Docker and integration with cloud services.
-- Providing a REST API for integration with external services.
+MIT License
